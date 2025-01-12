@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,700&subset=cyrillic" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&subset=cyrillic" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700&subset=cyrillic" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i|Tinos:400,400i&subset=cyrillic"
+		rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+	<script src="jquery-3.7.1.min.js" defer></script>
+	<script src="index.js" defer></script>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body,
+		html {
+			height: 100%;
+		}
+
+		body {
+			background-color: #000000;
+			color: #ffffff;
+		}
+
+		h1 {
+			font-family: "Playfair Display";
+			font-size: 30px;
+			padding: 10px 0px;
+			margin: 0px;
+		}
+
+		.field-box {
+			border: 2px solid #d0d0d0;
+			float: left;
+		}
+
+		.field {
+			display: grid;
+			grid-template-columns: repeat(40, 1fr);
+			/* 40 колонок */
+			grid-auto-rows: 1fr;
+			/* Равномерные строки */
+			width: 800px;
+			height: 480px;
+			gap: 0;
+		}
+
+		.tile {
+			width: 20px;
+			height: 20px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			border: 1px solid #444;
+			color: #fff;
+			background-color: #000;
+		}
+
+		.field .tileW {
+			background-image: url(images/tile-W.png);
+		}
+
+		.field .tileE {
+			background-image: url(images/tile-E.png);
+		}
+
+		.field .tileP {
+			background-image: url(/images/tile-P.png);
+			background-color: red;
+			border: 2px solid yellow;
+			background-size: cover;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.field .tileHP {
+			background-image: url(images/tile-HP.png);
+			background-size: cover;
+		}
+
+		.field .tileSW {
+			background-image: url(images/tile-SW.png);
+			background-size: cover;
+		}
+
+		.enemy {
+			background-image: url(images/tile-E.png);
+			border: 2px solid red;
+			background-size: cover;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+.health-bar-container {
+    position: absolute;
+    width: 40px; /* Ширина полоски */
+    height: 5px; /* Высота полоски */
+    background-color: #444; /* Цвет фона */
+    border: 1px solid #000;
+    transform: translate(-50%, -10px); /* Центрируем над юнитом */
+}
+
+.health-bar {
+    height: 100%;
+    background-color: red; /* Цвет полоски здоровья */
+    width: 100%; /* Начальная ширина */
+    transition: width 0.2s ease; /* Плавное изменение */
+}
+	</style>
+</head>
+
+<body>
+	<h1>Игровое поле</h1>
+	<div class="field-box">
+		<div class="field"></div>
+		
+		<div class="health-container">
+			<div class="health-bar">
+				<div class="player-health-bar"></div>
+			</div>
+		</div>
+	</div>
+	<a href="new_index.html">Testing area</a>
+	<div class="cl"></div>
+</body>
+
+</html>
