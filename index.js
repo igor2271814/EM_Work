@@ -16,6 +16,7 @@ let playerStats = {
     attackPower: 10,
 };
 
+
 // Вспомогательные функции
 function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -24,6 +25,7 @@ function getRandom(min, max) {
 // Генерация комнат
 function addRooms(field) {
     const roomCount = getRandom(5, 10);
+    let previousRoom = null;
 
     for (let i = 0; i < roomCount; i++) {
         const roomWidth = getRandom(3, 8);
@@ -31,80 +33,38 @@ function addRooms(field) {
         const roomX = getRandom(0, FIELD_WIDTH - roomWidth);
         const roomY = getRandom(0, FIELD_HEIGHT - roomHeight);
 
-        // Создаем комнату
+        const room = { x: roomX, y: roomY, width: roomWidth, height: roomHeight };
+
+        // Соединяем комнаты
+        if (previousRoom) {
+            connectRooms(field, previousRoom, room);
+        }
+        previousRoom = room;
+
         for (let y = roomY; y < roomY + roomHeight; y++) {
             for (let x = roomX; x < roomX + roomWidth; x++) {
                 field[y][x] = 'E';
             }
         }
-
-        // Соединяем комнату с основным проходом
-        connectRoomToMainPath(field, roomX, roomY, roomWidth, roomHeight);
     }
 }
 
-function connectRoomToMainPath(field, roomX, roomY, roomWidth, roomHeight) {
-    // Выбираем случайную точку на границе комнаты
-    const side = getRandom(0, 3); // 0: верх, 1: низ, 2: лево, 3: право
-    let connectionX, connectionY;
+// Соединение комнат тоннелями
+function connectRooms(field, room1, room2) {
+    let x = room1.x + Math.floor(room1.width / 2);
+    let y = room1.y + Math.floor(room1.height / 2);
+    const targetX = room2.x + Math.floor(room2.width / 2);
+    const targetY = room2.y + Math.floor(room2.height / 2);
 
-    switch (side) {
-        case 0: // Верх
-            connectionX = getRandom(roomX, roomX + roomWidth - 1);
-            connectionY = roomY;
-            break;
-        case 1: // Низ
-            connectionX = getRandom(roomX, roomX + roomWidth - 1);
-            connectionY = roomY + roomHeight - 1;
-            break;
-        case 2: // Лево
-            connectionX = roomX;
-            connectionY = getRandom(roomY, roomY + roomHeight - 1);
-            break;
-        case 3: // Право
-            connectionX = roomX + roomWidth - 1;
-            connectionY = getRandom(roomY, roomY + roomHeight - 1);
-            break;
+    while (x !== targetX) {
+        field[y][x] = 'E';
+        x += x < targetX ? 1 : -1;
     }
-
-    // Соединяем комнату с ближайшим проходом
-    connectToMainPath(field, connectionX, connectionY);
-}
-
-function connectToMainPath(field, x, y) {
-    // Находим ближайшую точку основного прохода
-    let targetX = x;
-    let targetY = y;
-
-    // Ищем ближайшую точку основного прохода
-    let minDistance = Infinity;
-    for (let i = 0; i < FIELD_HEIGHT; i++) {
-        for (let j = 0; j < FIELD_WIDTH; j++) {
-            if (field[i][j] === 'E' && (i !== y || j !== x)) { // Ищем проход, но не текущую клетку
-                const distance = Math.abs(x - j) + Math.abs(y - i); // Манхэттенское расстояние
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    targetX = j;
-                    targetY = i;
-                }
-            }
-        }
-    }
-
-    // Соединяем комнату с ближайшей точкой основного прохода
-    while (x !== targetX || y !== targetY) {
-        if (x < targetX) x++;
-        else if (x > targetX) x--;
-        else if (y < targetY) y++;
-        else if (y > targetY) y--;
-
-        if (field[y][x] !== 'E') {
-            field[y][x] = 'E'; // Создаем проход
-        }
+    while (y !== targetY) {
+        field[y][x] = 'E';
+        y += y < targetY ? 1 : -1;
     }
 }
-
-// Создание основного прохода
 function createMainPath(field) {
     let x = START_POINT.x;
     let y = START_POINT.y;
@@ -113,24 +73,17 @@ function createMainPath(field) {
     while (x < END_POINT.x) {
         field[y][x] = 'E'; // Проход
         x++;
-        // Добавляем небольшие изгибы
-        if (getRandom(0, 1) === 1 && y > 0) y--;
-        if (getRandom(0, 1) === 1 && y < FIELD_HEIGHT - 1) y++;
     }
 
     // Двигаемся вниз до конца
     while (y < END_POINT.y) {
         field[y][x] = 'E'; // Проход
         y++;
-        // Добавляем небольшие изгибы
-        if (getRandom(0, 1) === 1 && x > 0) x--;
-        if (getRandom(0, 1) === 1 && x < FIELD_WIDTH - 1) x++;
     }
 
     // Убедимся, что конечная точка тоже проходима
     field[END_POINT.y][END_POINT.x] = 'E';
 }
-
 // Размещение игрока
 function addPlayer(field) {
     while (true) {
@@ -139,18 +92,15 @@ function addPlayer(field) {
         if (field[y][x] === 'E') { // Проверяем, что клетка пустая
             field[y][x] = 'P';
             playerPosition = { x, y }; // Сохраняем позицию игрока
+            
             break;
         }
     }
 }
-
-// Обновление полоски здоровья
 function updateHealthBar() {
     const healthBar = document.querySelector('.player-health-bar');
     healthBar.style.width = `${(playerStats.health / playerStats.maxHealth) * 100}%`;
 }
-
-// Лечение игрока
 function healPlayer(amount) {
     playerStats.health += amount;
     if (playerStats.health > playerStats.maxHealth) {
@@ -159,8 +109,6 @@ function healPlayer(amount) {
     console.log(`Здоровье игрока восстановлено! Текущее здоровье: ${playerStats.health}`);
     updateHealthBar(); // Обновляем полоску здоровья
 }
-
-// Использование зелья
 function usePotion(potionX, potionY) {
     console.log(`Игрок подобрал зелье на координатах: ${potionX}, ${potionY}`);
     healPlayer(20); // Восстанавливаем здоровье
@@ -169,13 +117,13 @@ function usePotion(potionX, potionY) {
     debugGameState(); // Выводим отладочную информацию
 }
 
-// Удаление зелья
+
 function removePotion(x, y) {
     field[y][x] = '.'; // Убираем зелье с игрового поля
     renderField(); // Перерисовываем поле
 }
 
-// Атака врагов
+// Проверка соседних клеток
 function attackEnemies() {
     const directions = [
         { dx: 0, dy: -1 }, // Вверх
@@ -232,7 +180,9 @@ function addObjects(field, type, count) {
             console.log(`Зелье добавлено на координаты: ${x}, ${y}`);
         }
     }
+    
 }
+
 
 // Генерация поля
 function generateField() {
@@ -247,6 +197,7 @@ function generateField() {
 
     console.table(field); // Для отладки
 }
+
 
 // Отрисовка поля
 function renderField() {
@@ -277,8 +228,7 @@ function renderField() {
         });
     });
 }
-
-// Создание противников
+//Создание противников
 let enemies = []; // Глобальный массив для врагов
 
 function placeEnemies(field, numEnemies) {
@@ -303,9 +253,10 @@ function placeEnemies(field, numEnemies) {
         enemies.push({ x, y, health: 30 }); // Добавляем врага в глобальный массив
     }
     console.log('Противники успешно размещены:', enemies);
+    
 }
 
-// Атака врагов
+//ХП противника
 function enemyAttack() {
     let damageTaken = 0;
 
@@ -331,7 +282,8 @@ function enemyAttack() {
     }
 }
 
-// Передвижение противников
+
+//Передвижение противника
 function moveEnemies() {
     const directions = [
         { dx: 0, dy: -1 },
@@ -362,6 +314,36 @@ function moveEnemies() {
     renderField(); // Перерисовываем поле
 }
 
+
+function renderField() {
+    const fieldDiv = document.querySelector('.field');
+    fieldDiv.innerHTML = ''; // Очищаем старое поле
+
+    field.forEach((row, rowIndex) => {
+        row.forEach((tile, colIndex) => {
+            const tileDiv = document.createElement('div');
+            tileDiv.className = 'tile';
+
+            if (tile === 'W') tileDiv.classList.add('tileW');
+            else if (tile === 'E') tileDiv.classList.add('tileE');
+            else if (tile === 'P') {
+                tileDiv.classList.add('tileP');
+                addHealthBar(tileDiv, playerStats.health, playerStats.maxHealth, true); // Зеленая полоска для игрока
+            } else if (tile === 'SW') tileDiv.classList.add('tileSW');
+            else if (tile === 'HP') tileDiv.classList.add('tileHP');
+            else if (tile === 'EN') {
+                tileDiv.classList.add('enemy');
+                const enemy = enemies.find((e) => e.x === colIndex && e.y === rowIndex);
+                if (enemy) {
+                    addHealthBar(tileDiv, enemy.health, 30); // Красная полоска для врагов
+                }
+            }
+
+            fieldDiv.appendChild(tileDiv);
+        });
+    });
+}
+
 // Функция для добавления полоски здоровья
 function addHealthBar(parentElement, currentHealth, maxHealth, isPlayer = false) {
     const healthBarContainer = document.createElement('div');
@@ -375,7 +357,6 @@ function addHealthBar(parentElement, currentHealth, maxHealth, isPlayer = false)
     healthBarContainer.appendChild(healthBar);
     parentElement.appendChild(healthBarContainer);
 }
-
 // Обработчик передвижения героя
 function handleMovement(event) {
     const key = event.key.toLowerCase(); // Получаем нажатую клавишу
@@ -411,8 +392,6 @@ function handleMovement(event) {
         }
     }
 }
-
-// Отладочная информация
 function debugGameState() {
     console.log('Поле:');
     console.table(field);
@@ -428,9 +407,10 @@ function startGame() {
     renderField();
     setInterval(() => {
         moveEnemies();
-        updateHealthBar();
-        enemyAttack(); // Проверяем, атакуют ли противники героя
-    }, 1000); // Обновление каждую секунду
+        
+    updateHealthBar();
+    enemyAttack(); // Проверяем, атакуют ли противники героя
+}, 1000); // Обновление каждую секунду
 }
 
 document.addEventListener('DOMContentLoaded', startGame);
